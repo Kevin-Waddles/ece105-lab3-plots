@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple
@@ -129,4 +130,57 @@ def plot_histogram(ax: plt.Axes, sensor_a: np.ndarray, sensor_b: np.ndarray, bin
     ax.grid(True)
 
 
-__all__ = ["generate_data", "plot_scatter", "plot_histogram"]
+def main(argv=None) -> None:
+    """Command-line entry point that generates data and produces summary plots.
+
+    Parameters
+    ----------
+    argv : sequence of str or None
+        Optional list of command-line arguments (e.g., from sys.argv[1:]). If None, the
+        arguments are read from the command line. Recognized options:
+
+        --seed SEED    : integer RNG seed (default: 1234)
+        --out PATH     : output image file path (default: 'sensor_plots.png')
+        --show         : if provided, display the figure after saving
+
+    Returns
+    -------
+    None
+        The function saves a PNG summarizing the scatter, histogram, and boxplot to the
+        specified output path. It may also display the figure interactively when ``--show``
+        is supplied.
+    """
+    parser = argparse.ArgumentParser(description="Generate and save sensor plots for simulated data")
+    parser.add_argument("--seed", type=int, default=1234, help="RNG seed (last 4 digits of Drexel ID)")
+    parser.add_argument("--out", type=str, default="sensor_plots.png", help="Output image file path")
+    parser.add_argument("--show", action="store_true", help="Show the figure interactively after saving")
+    args = parser.parse_args(argv)
+
+    timestamps, sensor_a, sensor_b = generate_data(args.seed)
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    plot_scatter(axes[0], timestamps, sensor_a, sensor_b)
+    plot_histogram(axes[1], sensor_a, sensor_b)
+
+    # Boxplot on third axis
+    bp = axes[2].boxplot([sensor_a, sensor_b], labels=["Sensor A", "Sensor B"], showmeans=True, patch_artist=True)
+    colors = ["C0", "C1"]
+    for patch, color in zip(bp.get('boxes', []), colors):
+        patch.set_facecolor(color)
+    axes[2].set_ylabel('Temperature (°C)')
+    axes[2].set_title('Boxplot of Sensor Temperatures')
+    axes[2].grid(True, axis='y')
+
+    fig.tight_layout()
+    fig.savefig(args.out, dpi=150)
+    if args.show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+__all__ = ["generate_data", "plot_scatter", "plot_histogram", "main"]
+
+
+if __name__ == "__main__":
+    main()
