@@ -81,4 +81,52 @@ def plot_scatter(ax: plt.Axes, timestamps: np.ndarray, sensor_a: np.ndarray, sen
     ax.grid(True)
 
 
-__all__ = ["generate_data", "plot_scatter"]
+def plot_histogram(ax: plt.Axes, sensor_a: np.ndarray, sensor_b: np.ndarray, bins: int = 20) -> None:
+    """Create an overlaid histogram of two sensor datasets on the provided Axes.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib Axes to draw the histogram on. Modified in place.
+    sensor_a : numpy.ndarray
+        1-D array of sensor A temperature readings (shape (n,)).
+    sensor_b : numpy.ndarray
+        1-D array of sensor B temperature readings (shape (n,)).
+    bins : int, optional
+        Number of histogram bins to use (default: 20).
+
+    Returns
+    -------
+    None
+        The function updates the provided Axes and does not return a value.
+
+    Notes
+    -----
+    The function overlays histograms for the two sensors with semi-transparent fills and
+    draws dashed vertical lines indicating the mean of each distribution. It does not call
+    ``plt.show()`` so callers can combine this with other figure-level adjustments.
+    """
+    # Basic validation
+    if sensor_a.ndim != 1 or sensor_b.ndim != 1:
+        raise ValueError("sensor_a and sensor_b must be 1-D arrays")
+    if sensor_a.shape[0] != sensor_b.shape[0]:
+        # lengths don't strictly need to be equal for histograms, but warn if different
+        raise ValueError("sensor_a and sensor_b should have the same length")
+
+    ax.hist(sensor_a, bins=bins, alpha=0.6, label='Sensor A', color='C0')
+    ax.hist(sensor_b, bins=bins, alpha=0.6, label='Sensor B', color='C1')
+
+    # Mean lines
+    mean_a = float(np.mean(sensor_a))
+    mean_b = float(np.mean(sensor_b))
+    ax.axvline(mean_a, color='C0', linestyle='--', linewidth=1, label=f"A mean {mean_a:.2f}°C")
+    ax.axvline(mean_b, color='C1', linestyle='--', linewidth=1, label=f"B mean {mean_b:.2f}°C")
+
+    ax.set_xlabel('Temperature (°C)')
+    ax.set_ylabel('Count')
+    ax.set_title('Histogram of Sensor Temperatures')
+    ax.legend()
+    ax.grid(True)
+
+
+__all__ = ["generate_data", "plot_scatter", "plot_histogram"]
